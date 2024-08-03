@@ -1,6 +1,10 @@
-import 'package:flutter/cupertino.dart';
+// ignore_for_file: avoid_web_libraries_in_flutter
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+
+import 'dart:html' as html;
+
+import 'package:flutter/services.dart';
 
 void main() => runApp(const MyApp());
 
@@ -30,7 +34,7 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  bool isHide = false;
+  bool isHide = true;
   @override
   Widget build(BuildContext context) {
     const String privacyPolicy = '''
@@ -108,7 +112,7 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
                         ]),
                     child: Image.asset(
                       'assets/images/image_logo.png',
-                      scale: 10,
+                      scale: 1,
                     ),
                   ),
                 ],
@@ -124,6 +128,8 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
               ),
+              SizedBox(height: size.height * 0.02),
+
               if (!isHide)
                 Container(
                   color: Colors.transparent,
@@ -131,27 +137,38 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
                   child: const Text(privacyPolicy),
                 ),
 
-              SizedBox(
-                width: size.width * 0.2,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      isHide = !isHide;
-                    });
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(!isHide
-                          ? Icons.keyboard_arrow_up_outlined
-                          : Icons.keyboard_arrow_down_outlined),
-                      SizedBox(
-                        width: size.width * 0.05,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(!isHide ? "Ocultar" : "Mostrar"),
-                    ],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isHide = !isHide;
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(!isHide
+                            ? Icons.keyboard_arrow_up_outlined
+                            : Icons.keyboard_arrow_down_outlined),
+                        // SizedBox(
+                        //   width: size.width * 0.05,
+                        // ),
+                        Text(!isHide ? "Ocultar" : "Mostrar"),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
 
               // Heading
@@ -169,17 +186,15 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
               ),
 
               // Subtitle
-              const Padding(
-                padding: EdgeInsets.only(bottom: 30.0),
-                child: Text(
-                  'Dare to look for that little thing that you want to see so much and enjoy it',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Dare to look for that little thing that you want to see so much and enjoy it',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
                 ),
               ),
+              SizedBox(height: size.height * 0.02),
 
               // Buttons
               Row(
@@ -187,7 +202,7 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // TODO: Implement App Store link
+                      _downloadApk();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
@@ -199,7 +214,7 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text('GET IT ON\nGoogle Play'),
+                    child: const Text('Download Apk'),
                   ),
                   const SizedBox(width: 20),
                   // ElevatedButton(
@@ -243,5 +258,31 @@ Al utilizar nuestra aplicación, usted acepta esta Política de Privacidad. Si n
         ),
       ),
     );
+  }
+
+  Future<void> _downloadApk() async {
+    final ByteData data = await rootBundle.load('assets/apks/app-release.apk');
+
+    // Convertir ByteData a Uint8List
+    final Uint8List apkBytes = data.buffer.asUint8List();
+    // Crear un Blob a partir de los bytes del APK
+    final blob =
+        html.Blob([apkBytes], 'application/vnd.android.package-archive');
+
+    // Crear una URL para el Blob
+    final url = html.Url.createObjectUrlFromBlob(blob);
+
+    // Crear un elemento de enlace (anchor element)
+    final anchor = html.document.createElement('a') as html.AnchorElement
+      ..href = url
+      ..style.display = 'none'
+      ..download = "Movies Gallery";
+
+    // Agregar el anchor al documento y hacer clic
+    html.document.body!.children.add(anchor);
+    anchor.click();
+
+    // Revocar la URL temporal
+    html.Url.revokeObjectUrl(url);
   }
 }
